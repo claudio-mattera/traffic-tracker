@@ -51,6 +51,7 @@ package-arm:cargo:
   image: rust:latest
   before_script:
     - rustup target add armv7-unknown-linux-gnueabihf
+    - apt-get update
     - apt-get install -y gcc-arm-linux-gnueabihf
   script:
     - cargo build --release --target=armv7-unknown-linux-gnueabihf
