@@ -1,5 +1,6 @@
 use std::fmt;
 
+
 #[derive(Debug)]
 pub struct TrafficError(String);
 
@@ -59,6 +60,12 @@ impl From<toml::de::Error> for TrafficError {
 
 impl From<serde_json::error::Error> for TrafficError {
     fn from(error: serde_json::error::Error) -> Self {
+        TrafficError(error.to_string())
+    }
+}
+
+impl From<rusqlite::Error> for TrafficError {
+    fn from(error: rusqlite::Error) -> Self {
         TrafficError(error.to_string())
     }
 }

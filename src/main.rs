@@ -1,10 +1,14 @@
 mod error;
 use crate::error::*;
 
+mod types;
+use crate::types::{Bytes, Duration};
+
 mod configuration;
 use crate::configuration::*;
 
-use std::fmt;
+mod storage;
+use crate::storage::*;
 
 use log::*;
 
@@ -14,6 +18,7 @@ fn main() -> Result<(), TrafficError> {
     let base_url = reqwest::Url::parse(&configuration.base_url)?;
     let username = configuration.username;
     let password = configuration.password;
+    let database = configuration.database;
 
     let client = reqwest::Client::new();
 
@@ -22,7 +27,9 @@ fn main() -> Result<(), TrafficError> {
     let total_traffic = get_overview(&base_url, &client, session_id)?;
     logout(&base_url, &client, session_id)?;
 
-    info!("Total traffic: {}", total_traffic);
+    info!("Total traffic: {}", Bytes::new(total_traffic));
+
+    store_traffic(total_traffic, &database)?;
 
     Ok(())
 }
@@ -92,7 +99,7 @@ fn get_overview(
     base_url: &reqwest::Url,
     client: &reqwest::Client,
     session_id: u64,
-) -> Result<Bytes, TrafficError> {
+) -> Result<i64, TrafficError> {
 
     debug!("Getting overview...");
 
@@ -120,10 +127,10 @@ fn get_overview(
             // { uprate' : '0' , 'downrate' : '0' , 'upvolume' : '0' , 'downvolume' : '0' , 'liveTime' : '0' }
             let text = text.replace("'", "\"");
             let dict: serde_json::Value = serde_json::from_str(&text)?;
-            let upvolume: u64 = dict.get("upvolume").unwrap()
+            let upvolume: i64 = dict.get("upvolume").unwrap()
                 .as_str().unwrap()
                 .parse().unwrap();
-            let downvolume: u64 = dict.get("downvolume").unwrap()
+            let downvolume: i64 = dict.get("downvolume").unwrap()
                 .as_str().unwrap()
                 .parse().unwrap();
             let livetime: u64 = dict.get("liveTime").unwrap()
@@ -133,7 +140,7 @@ fn get_overview(
             let total_traffic = upvolume + downvolume;
             debug!("Total traffic: {}", total_traffic);
             debug!("Livetime: {}", livetime);
-            return Ok(Bytes::new(total_traffic));
+            return Ok(total_traffic);
         } else {
             Err(TrafficError::new("No closing brace".to_string()))
         }
@@ -169,66 +176,4 @@ fn process_request(
     }
 
     Ok(response)
-}
-
-struct Bytes(u64);
-
-impl Bytes {
-    fn new(n: u64) -> Self {
-        Self(n)
-    }
-}
-
-impl fmt::Display for Bytes {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.0 < 1024 {
-            write!(f, "{} B", self.0)
-        } else if self.0 < 1024 * 1024 {
-            write!(f, "{:.2} kB", self.0 as f64 / 1024.0)
-        } else if self.0 < 1024 * 1024 * 1024 {
-            write!(f, "{:.2} MB", self.0 as f64 / 1024.0 / 1024.0)
-        } else {
-            write!(f, "{:.2} GB", self.0 as f64 / 1024.0 / 1024.0 / 1024.0)
-        }
-    }
-}
-
-
-struct Duration(u64);
-
-impl Duration {
-    fn from_secs(n: u64) -> Self {
-        Self(n)
-    }
-}
-
-impl fmt::Display for Duration {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "P")?;
-
-        let mut n: u64 = self.0;
-
-        if n >= 3600 * 24 {
-            write!(f, "D{}", n / (3600 * 24))?;
-            n %= 3600 * 24;
-        }
-
-        if n > 0 {
-            write!(f, "T")?;
-        }
-
-        if n >= 3600 {
-            write!(f, "H{:02}", n / 3600)?;
-        }
-        n %= 3600;
-        if n >= 60 {
-            write!(f, "M{:02}", n / 60)?;
-        }
-        n %= 60;
-        if n > 0 {
-            write!(f, "S{:02}", n)?;
-        }
-
-        Ok(())
-    }
 }

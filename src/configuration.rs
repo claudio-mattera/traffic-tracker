@@ -14,6 +14,7 @@ pub struct Configuration {
     pub base_url: String,
     pub username: String,
     pub password: String,
+    pub database: String,
 }
 
 pub fn load_configuration() -> Result<Configuration, TrafficError> {
