@@ -31,7 +31,7 @@ before_script:
   allow_failure: true
 
 
-build:cargo:
+.build:cargo:
   stage: build
   image: rust:latest
   script:
@@ -41,7 +41,7 @@ build:cargo:
       - 'target/debug/'
 
 
-test:cargo:
+.test:cargo:
   stage: test
   image: rust:latest
   script:
