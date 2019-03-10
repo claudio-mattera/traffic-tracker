@@ -31,7 +31,7 @@ build:cargo:
   stage: build
   image: rust:latest
   script:
-    - cargo build --bins --lib --tests
+    - cargo build --bins --tests
   artifacts:
     paths:
       - 'target/debug/'
