@@ -7,6 +7,10 @@ stages:
   - package
 
 
+before_script:
+  - apt-get install -i libssl-dev
+
+
 lint:rustfmt:
   stage: lint
   image: rust:latest
