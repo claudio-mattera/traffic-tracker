@@ -8,7 +8,7 @@ stages:
 
 
 before_script:
-  - apt-get install -y libssl-dev
+  - apt-get install -y gcc-arm-linux-gnueabihf
 
 
 .lint:rustfmt:
