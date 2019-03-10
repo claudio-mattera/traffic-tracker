@@ -11,7 +11,7 @@ before_script:
   - apt-get install -i libssl-dev
 
 
-lint:rustfmt:
+.lint:rustfmt:
   stage: lint
   image: rust:latest
   before_script:
@@ -21,7 +21,7 @@ lint:rustfmt:
   allow_failure: true
 
 
-lint:clippy:
+.lint:clippy:
   stage: lint
   image: rust:latest
   before_script:
