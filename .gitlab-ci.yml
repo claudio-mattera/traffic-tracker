@@ -8,7 +8,7 @@ stages:
 
 
 before_script:
-  - apt-get install -i libssl-dev
+  - apt-get install -y libssl-dev
 
 
 .lint:rustfmt:
