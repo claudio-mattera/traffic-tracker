@@ -16,7 +16,7 @@ pub fn store_traffic(traffic: i64, database: &str) -> Result<()> {
     Ok(())
 }
 
-fn fetch_previous_data(connection: &Connection, today: &NaiveDate) -> Result<i64> {
+fn fetch_previous_data(connection: &Connection, today: NaiveDate) -> Result<i64> {
     let yesterday = today.pred();
 
     debug!("Fetching previous data");
@@ -38,7 +38,7 @@ fn insert_data(connection: &Connection, traffic: i64) -> Result<()> {
     let now: Date<Utc> = Utc::now().date();
     let today: NaiveDate = now.naive_utc();
 
-    let traffic = match fetch_previous_data(connection, &today) {
+    let traffic = match fetch_previous_data(connection, today) {
         Ok(yesterday_traffic) if traffic > yesterday_traffic => {
             info!(
                 "Subtracting value from previous day: {}",

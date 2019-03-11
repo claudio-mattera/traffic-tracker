@@ -84,13 +84,13 @@ mod tests {
 
     #[test]
     fn display_megabytes() {
-        let bytes = Bytes::new(45326252);
+        let bytes = Bytes::new(45_326_252);
         assert_eq!(format!("{}", bytes), "43.23 MB");
     }
 
     #[test]
     fn display_gigabytes() {
-        let bytes = Bytes::new(987345983759);
+        let bytes = Bytes::new(987_345_983_759);
         assert_eq!(format!("{}", bytes), "919.54 GB");
     }
 
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn display_days_hours_and_minutes_and_seconds() {
-        let duration = Duration::from_secs(2584783);
+        let duration = Duration::from_secs(2_584_783);
         assert_eq!(format!("{}", duration), "P29DT21H59M43S");
     }
 
