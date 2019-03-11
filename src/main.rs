@@ -10,6 +10,8 @@ use crate::configuration::*;
 mod storage;
 use crate::storage::*;
 
+use chrono::prelude::*;
+
 use log::*;
 
 fn main() -> Result<(), TrafficError> {
@@ -20,16 +22,24 @@ fn main() -> Result<(), TrafficError> {
     let password = configuration.password;
     let database = configuration.database;
 
+    let now: Date<Utc> = Utc::now().date();
+    let today: NaiveDate = now.naive_utc();
+
     let client = reqwest::Client::new();
 
     let session_id = login(&base_url, &client, &username, &password)?;
     debug!("Session ID: {}", session_id);
     let total_traffic = get_overview(&base_url, &client, session_id)?;
+    if today.day() == 1 {
+        info!("Today it is the first day of the month, clearing statistics");
+        clear_statistics(&base_url, &client, session_id)?;
+    }
     logout(&base_url, &client, session_id)?;
 
     info!("Total traffic: {}", Bytes::new(total_traffic));
 
     store_traffic(total_traffic, &database)?;
+
 
     Ok(())
 }
@@ -88,6 +98,29 @@ fn logout(
 
     let url = base_url.join("/index/logout.cgi")?;
     let request = client.post(url)
+        .headers(headers)
+        .build()?;
+    let _response = process_request(&client, request)?;
+
+    Ok(())
+}
+
+fn clear_statistics(
+    base_url: &reqwest::Url,
+    client: &reqwest::Client,
+    session_id: u64,
+) -> Result<(), TrafficError> {
+
+    debug!("Logging out...");
+
+    let cookie = format!("Language=en_us; SessionID_R3={}", session_id);
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(reqwest::header::COOKIE, cookie.parse().unwrap());
+
+    let url = base_url.join("/html/status/cleanWanStatisticsData.cgi")?;
+    let params = [("RequestFile", "/html/status/overview.asp")];
+    let request = client.post(url)
+        .form(&params)
         .headers(headers)
         .build()?;
     let _response = process_request(&client, request)?;
