@@ -7,7 +7,7 @@ stages:
   - package
 
 
-.lint:rustfmt:
+lint:rustfmt:
   stage: lint
   image: rust:latest
   before_script:
@@ -17,7 +17,7 @@ stages:
   allow_failure: true
 
 
-.lint:clippy:
+lint:clippy:
   stage: lint
   image: rust:latest
   before_script:
@@ -27,7 +27,7 @@ stages:
   allow_failure: true
 
 
-.build:cargo:
+build:cargo:
   stage: build
   image: rust:latest
   script:
@@ -37,7 +37,7 @@ stages:
       - 'target/debug/'
 
 
-.test:cargo:
+test:cargo:
   stage: test
   image: rust:latest
   script:
