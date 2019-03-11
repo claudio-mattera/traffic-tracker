@@ -5,9 +5,10 @@ use chrono::prelude::*;
 
 use log::*;
 
+use crate::types::Bytes;
+
 
 pub fn store_traffic(traffic: i64, database: &str) -> Result<()> {
-    info!("Recording traffic in SQLite database \"{}\"", database);
 
     let connection = Connection::open(database)?;
     create_table(&connection)?;
@@ -20,7 +21,7 @@ pub fn store_traffic(traffic: i64, database: &str) -> Result<()> {
 fn fetch_previous_data(connection: &Connection, today: &NaiveDate) -> Result<i64> {
     let yesterday = today.pred();
 
-    debug!("Fetching previous data...");
+    debug!("Fetching previous data");
 
     let value: i64 = connection.query_row(
         "SELECT traffic FROM traffic WHERE date = ?",
@@ -34,14 +35,24 @@ fn fetch_previous_data(connection: &Connection, today: &NaiveDate) -> Result<i64
 }
 
 fn insert_data(connection: &Connection, traffic: i64) -> Result<()> {
-    debug!("Inserting new data...");
+    debug!("Inserting new value {}", Bytes::new(traffic));
 
     let now: Date<Utc> = Utc::now().date();
     let today: NaiveDate = now.naive_utc();
 
     let traffic = match fetch_previous_data(connection, &today) {
-        Ok(value) if traffic > value => traffic - value,
-        _ => traffic,
+        Ok(yesterday_traffic) if traffic > yesterday_traffic => {
+            info!("Subtracting value from previous day: {}", Bytes::new(yesterday_traffic));
+            traffic - yesterday_traffic
+        },
+        Ok(yesterday_traffic) => {
+            info!("Ignoring value from previous day: {}", Bytes::new(yesterday_traffic));
+            traffic
+        }
+        _ => {
+            info!("Ignoring missing value from previous day");
+            traffic
+        },
     };
     info!("Storing value {}", traffic);
 
@@ -55,7 +66,7 @@ fn insert_data(connection: &Connection, traffic: i64) -> Result<()> {
 
 
 fn create_table(connection: &Connection) -> Result<()> {
-    debug!("Creating table...");
+    debug!("Creating table");
 
     connection.execute(
         "CREATE TABLE IF NOT EXISTS traffic (date DATETIME, traffic INTEGER, PRIMARY KEY (date))",

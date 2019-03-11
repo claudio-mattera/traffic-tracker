@@ -27,17 +27,20 @@ fn main() -> Result<(), TrafficError> {
 
     let client = reqwest::Client::new();
 
+    info!("Retrieving current traffic statistics");
     let session_id = login(&base_url, &client, &username, &password)?;
     debug!("Session ID: {}", session_id);
     let total_traffic = get_overview(&base_url, &client, session_id)?;
+    info!("Total traffic: {}", Bytes::new(total_traffic));
+
     if today.day() == 1 {
         info!("Today it is the first day of the month, clearing statistics");
         clear_statistics(&base_url, &client, session_id)?;
     }
+
     logout(&base_url, &client, session_id)?;
 
-    info!("Total traffic: {}", Bytes::new(total_traffic));
-
+    info!("Recording traffic statistics in database \"{}\"", database);
     store_traffic(total_traffic, &database)?;
 
 
@@ -51,7 +54,7 @@ fn login(
     password: &str,
 ) -> Result<u64, TrafficError> {
 
-    debug!("Logging in...");
+    debug!("Logging in");
     let params = [("Username", username), ("Password", password)];
     let url = base_url.join("/index/login.cgi")?;
 
@@ -90,7 +93,7 @@ fn logout(
     session_id: u64,
 ) -> Result<(), TrafficError> {
 
-    debug!("Logging out...");
+    debug!("Logging out");
 
     let cookie = format!("Language=en_us; SessionID_R3={}", session_id);
     let mut headers = reqwest::header::HeaderMap::new();
@@ -111,7 +114,7 @@ fn clear_statistics(
     session_id: u64,
 ) -> Result<(), TrafficError> {
 
-    debug!("Logging out...");
+    debug!("Logging out");
 
     let cookie = format!("Language=en_us; SessionID_R3={}", session_id);
     let mut headers = reqwest::header::HeaderMap::new();
@@ -134,7 +137,7 @@ fn get_overview(
     session_id: u64,
 ) -> Result<i64, TrafficError> {
 
-    debug!("Getting overview...");
+    debug!("Getting overview");
 
     let cookie = format!("Language=en_us; SessionID_R3={}", session_id);
     let mut headers = reqwest::header::HeaderMap::new();
