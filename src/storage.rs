@@ -1,12 +1,11 @@
-use rusqlite::{Connection, Result, NO_PARAMS};
 use rusqlite::types::ToSql;
+use rusqlite::{Connection, Result, NO_PARAMS};
 
 use chrono::prelude::*;
 
 use log::*;
 
 use crate::types::Bytes;
-
 
 pub fn store_traffic(traffic: i64, database: &str) -> Result<()> {
 
@@ -17,7 +16,6 @@ pub fn store_traffic(traffic: i64, database: &str) -> Result<()> {
     Ok(())
 }
 
-
 fn fetch_previous_data(connection: &Connection, today: &NaiveDate) -> Result<i64> {
     let yesterday = today.pred();
 
@@ -26,7 +24,7 @@ fn fetch_previous_data(connection: &Connection, today: &NaiveDate) -> Result<i64
     let value: i64 = connection.query_row(
         "SELECT traffic FROM traffic WHERE date = ?",
         &[&yesterday as &ToSql],
-        |row| row.get(0)
+        |row| row.get(0),
     )?;
 
     info!("Yesterday's value: {}", value);
@@ -42,17 +40,23 @@ fn insert_data(connection: &Connection, traffic: i64) -> Result<()> {
 
     let traffic = match fetch_previous_data(connection, &today) {
         Ok(yesterday_traffic) if traffic > yesterday_traffic => {
-            info!("Subtracting value from previous day: {}", Bytes::new(yesterday_traffic));
+            info!(
+                "Subtracting value from previous day: {}",
+                Bytes::new(yesterday_traffic),
+            );
             traffic - yesterday_traffic
-        },
+        }
         Ok(yesterday_traffic) => {
-            info!("Ignoring value from previous day: {}", Bytes::new(yesterday_traffic));
+            info!(
+                "Ignoring value from previous day: {}",
+                Bytes::new(yesterday_traffic),
+            );
             traffic
         }
         _ => {
             info!("Ignoring missing value from previous day");
             traffic
-        },
+        }
     };
     info!("Storing value {}", traffic);
 
@@ -63,7 +67,6 @@ fn insert_data(connection: &Connection, traffic: i64) -> Result<()> {
 
     Ok(())
 }
-
 
 fn create_table(connection: &Connection) -> Result<()> {
     debug!("Creating table");

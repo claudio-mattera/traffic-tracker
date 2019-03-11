@@ -61,4 +61,3 @@ pub fn setup_logging(verbosity: u64) {
     let filter = env_logger::Env::default().default_filter_or(default_log_filter);
     env_logger::Builder::from_env(filter).init();
 }
-

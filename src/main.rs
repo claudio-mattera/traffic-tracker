@@ -43,7 +43,6 @@ fn main() -> Result<(), TrafficError> {
     info!("Recording traffic statistics in database \"{}\"", database);
     store_traffic(total_traffic, &database)?;
 
-
     Ok(())
 }
 
@@ -53,7 +52,6 @@ fn login(
     username: &str,
     password: &str,
 ) -> Result<u64, TrafficError> {
-
     debug!("Logging in");
     let params = [("Username", username), ("Password", password)];
     let url = base_url.join("/index/login.cgi")?;
@@ -78,12 +76,12 @@ fn login(
             return Ok(session_id);
         }
         return Err(TrafficError::new(
-            "Did not receive a new session id".to_string()
+            "Did not receive a new session id".to_string(),
         ));
     }
 
     Err(TrafficError::new(
-        "Did not receive a new cookie".to_string()
+        "Did not receive a new cookie".to_string(),
     ))
 }
 
@@ -144,7 +142,7 @@ fn get_overview(
     headers.insert(reqwest::header::COOKIE, cookie.parse().unwrap());
     headers.insert(
         reqwest::header::REFERER,
-        "http://192.168.1.1/index/login.cgi".parse().unwrap()
+        "http://192.168.1.1/index/login.cgi".parse().unwrap(),
     );
 
     let url = base_url.join("/html/status/overview.asp")?;
@@ -206,7 +204,11 @@ fn process_request(
 
     let response = client.execute(request)?;
     debug!("T {} -> {}", url, "this");
-    debug!("HTTP/1.1 {} {}.", response.status().as_u16(), response.status().as_str());
+    debug!(
+        "HTTP/1.1 {} {}.",
+        response.status().as_u16(),
+        response.status().as_str(),
+    );
     for (key, value) in response.headers().iter() {
         debug!("{:?}: {:?}.", key, value);
     }
