@@ -22,7 +22,7 @@ fn fetch_previous_data(connection: &Connection, today: NaiveDate) -> Result<i64>
     debug!("Fetching previous data");
 
     let value: i64 = connection.query_row(
-        "SELECT traffic FROM traffic WHERE date = ?",
+        "SELECT cumulative_traffic FROM traffic WHERE date = ?",
         &[&yesterday as &ToSql],
         |row| row.get(0),
     )?;
@@ -32,37 +32,37 @@ fn fetch_previous_data(connection: &Connection, today: NaiveDate) -> Result<i64>
     Ok(value)
 }
 
-fn insert_data(connection: &Connection, traffic: i64) -> Result<()> {
-    debug!("Inserting new value {}", Bytes::new(traffic));
+fn insert_data(connection: &Connection, today_cumulative_traffic: i64) -> Result<()> {
+    debug!("Inserting new value {}", Bytes::new(today_cumulative_traffic));
 
     let now: Date<Utc> = Utc::now().date();
     let today: NaiveDate = now.naive_utc();
 
-    let traffic = match fetch_previous_data(connection, today) {
-        Ok(yesterday_traffic) if traffic > yesterday_traffic => {
+    let today_instantaneous_traffic = match fetch_previous_data(connection, today) {
+        Ok(yesterday_cumulative_traffic) if today_cumulative_traffic > yesterday_cumulative_traffic => {
             info!(
                 "Subtracting value from previous day: {}",
-                Bytes::new(yesterday_traffic),
+                Bytes::new(yesterday_cumulative_traffic),
             );
-            traffic - yesterday_traffic
+            today_cumulative_traffic - yesterday_cumulative_traffic
         }
-        Ok(yesterday_traffic) => {
+        Ok(yesterday_cumulative_traffic) => {
             info!(
                 "Ignoring value from previous day: {}",
-                Bytes::new(yesterday_traffic),
+                Bytes::new(yesterday_cumulative_traffic),
             );
-            traffic
+            today_cumulative_traffic
         }
         _ => {
             info!("Ignoring missing value from previous day");
-            traffic
+            today_cumulative_traffic
         }
     };
-    info!("Storing value {}", traffic);
+    info!("Storing values {}, {}", today_instantaneous_traffic, today_cumulative_traffic);
 
     connection.execute(
-        "INSERT INTO traffic (date, traffic) VALUES (?1, ?2)",
-        &[&today as &ToSql, &traffic],
+        "INSERT INTO traffic (date, traffic, cumulative_traffic) VALUES (?1, ?2, ?3)",
+        &[&today as &ToSql, &today_instantaneous_traffic, &today_cumulative_traffic],
     )?;
 
     Ok(())
@@ -72,7 +72,12 @@ fn create_table(connection: &Connection) -> Result<()> {
     debug!("Creating table");
 
     connection.execute(
-        "CREATE TABLE IF NOT EXISTS traffic (date DATETIME, traffic INTEGER, PRIMARY KEY (date))",
+        "CREATE TABLE IF NOT EXISTS traffic (
+            date DATETIME,
+            traffic INTEGER,
+            cumulative_traffic INTEGER,
+            PRIMARY KEY (date)
+        )",
         NO_PARAMS,
     )?;
 
