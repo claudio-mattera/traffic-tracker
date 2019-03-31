@@ -33,8 +33,8 @@ fn main() -> Result<(), TrafficError> {
     let total_traffic = get_overview(&base_url, &client, session_id)?;
     info!("Total traffic: {}", Bytes::new(total_traffic));
 
-    if today.day() == 1 {
-        info!("Today it is the first day of the month, clearing statistics");
+    if today.succ().day() == 1 {
+        info!("Today it is the last day of the month, clearing statistics");
         clear_statistics(&base_url, &client, session_id)?;
     }
 
