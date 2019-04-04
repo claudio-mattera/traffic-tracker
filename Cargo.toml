@@ -3,6 +3,7 @@ name = "traffic-tracker"
 version = "0.1.0"
 repository = "https://gitlab.com/claudio.mattera/traffic-tracker"
 authors = ["Claudio Mattera <claudio@mattera.it>"]
+description = "Track traffic in router Huawei E5172As-22"
 edition = "2018"
 license = "MIT"
 publish = false

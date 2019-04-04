@@ -5,7 +5,8 @@ use env_logger;
 
 use serde::Deserialize;
 
-use clap::{App, Arg, ArgMatches};
+use clap::{Arg, ArgMatches, app_from_crate, crate_name, crate_version, crate_authors, crate_description};
+
 
 use super::TrafficError;
 
@@ -30,10 +31,7 @@ pub fn load_configuration() -> Result<Configuration, TrafficError> {
 }
 
 fn parse_command_line() -> ArgMatches<'static> {
-    App::new("Traffic Tracker")
-        .version("0.1.0")
-        .author("Claudio Mattera <claudio@mattera.it>")
-        .about("Track traffic in router Huawei E5172As-22")
+    app_from_crate!()
         .arg(
             Arg::with_name("config")
                 .short("c")
