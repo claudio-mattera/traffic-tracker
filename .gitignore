@@ -1,5 +1,0 @@
-/target
-**/*.rs.bk
-
-*.toml
-!Cargo.toml
